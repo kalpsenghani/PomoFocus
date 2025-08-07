@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -11,6 +8,12 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+  },
+  webpack: (config) => {
+    // Workaround for Node.js v22 hashing incompatibility during production builds
+    config.output = config.output || {}
+    config.output.hashFunction = 'md4'
+    return config
   },
   async headers() {
     return [

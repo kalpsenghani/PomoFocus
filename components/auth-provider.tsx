@@ -19,30 +19,54 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const getInitialSession = async () => {
+      try {
+        console.log("Getting initial session...")
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log("Initial session:", session?.user?.email, "Session exists:", !!session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } catch (error) {
+        console.error("Error getting initial session:", error)
+        setUser(null)
+        setLoading(false)
+      }
+    }
+
+    getInitialSession()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session?.user?.email, "Session:", !!session)
       setUser(session?.user ?? null)
       setLoading(false)
 
       // Create user profile on signup
-      if (event === "SIGNED_UP" && session?.user) {
+      if (event === "SIGNED_IN" && session?.user) {
         await createUserProfile(session.user)
+      }
+
+      // Handle sign out
+      if (event === "SIGNED_OUT") {
+        setUser(null)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, mounted])
 
   const createUserProfile = async (user: User) => {
     try {
@@ -77,11 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log("Signing in with email:", email)
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
     if (error) throw error
+    console.log("Sign in successful:", data.user?.email)
   }
 
   const signUp = async (email: string, password: string, fullName?: string) => {
@@ -98,8 +124,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    try {
+      // Optimistically clear user for immediate UI feedback
+      setUser(null)
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+    } catch (e) {
+      // If signout failed, try to refetch session to correct state
+      const { data } = await supabase.auth.getSession()
+      setUser(data.session?.user ?? null)
+      throw e
+    }
   }
 
   const deleteAccount = async () => {
@@ -120,6 +155,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Error deleting account:", error)
       throw error
     }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <AuthContext.Provider value={{ user: null, loading: true, signIn, signUp, signOut, deleteAccount }}>
+        {children}
+      </AuthContext.Provider>
+    )
   }
 
   return (
