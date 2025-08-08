@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,18 +25,22 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { signIn } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
+      console.log("Login form submitting...")
       await signIn(email, password)
+      console.log("Login successful, waiting for auth state change...")
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in to PomoFocus.",
       })
     } catch (error: any) {
+      console.error("Login error:", error)
       toast({
         title: "Sign in failed",
         description: error.message || "Please check your credentials and try again.",

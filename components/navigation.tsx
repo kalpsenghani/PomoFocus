@@ -1,125 +1,188 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Timer, BarChart3, Settings, User, Moon, Sun, Menu, X, Home } from "lucide-react"
-import { useTheme } from "next-themes"
-import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "@/components/auth-provider"
+import { LogIn, LogOut, Menu, X } from "lucide-react"
+import { useState } from "react"
 
 export function Navigation() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
-  const router = useRouter()
   const pathname = usePathname()
+  const { user, signOut, loading } = useAuth()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const navItems = [
-    { icon: Home, label: "Dashboard", path: "/", active: pathname === "/" },
-    { icon: BarChart3, label: "Analytics", path: "/analytics", active: pathname === "/analytics" },
-    { icon: Settings, label: "Settings", path: "/settings", active: pathname === "/settings" },
-    { icon: User, label: "Profile", path: "/profile", active: pathname === "/profile" },
-  ]
+  // Check if we're on the landing page
+  const isLandingPage = pathname === "/"
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (e) {
+      console.error("Sign out error:", e)
+    } finally {
+      window.location.href = "/"
+    }
+  }
 
   return (
-    <nav className="border-b border-neutral-700/40 bg-black/20 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-2 cursor-pointer"
-            onClick={() => router.push("/")}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-[#00FFFF] to-[#7F5AF0] rounded-lg flex items-center justify-center">
-              <Timer className="w-4 h-4 text-white" />
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#00FFFF] to-[#7F5AF0] rounded-lg flex items-center justify-center">
+              <span className="text-black font-bold text-sm">PF</span>
             </div>
-            <span className="text-xl font-bold text-white">PomoFocus</span>
-            <Badge className="bg-[#7F5AF0]/20 text-[#7F5AF0] border-[#7F5AF0]/30 text-xs">Pro</Badge>
-          </motion.div>
+            <span className="text-white font-bold text-xl">PomoFocus</span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Button
-                  onClick={() => router.push(item.path)}
-                  variant="ghost"
-                  className={`px-4 py-2 rounded-xl transition-all duration-300 ${
-                    item.active
-                      ? "bg-[#00FFFF]/10 text-[#00FFFF] border border-[#00FFFF]/30"
-                      : "text-neutral-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <item.icon className="w-4 h-4 mr-2" />
-                  {item.label}
-                </Button>
-              </motion.div>
-            ))}
+          <div className="hidden md:flex items-center space-x-8">
+            {isLandingPage ? (
+              // Landing page navigation
+              <>
+                <a href="#features" className="text-neutral-400 hover:text-white transition-colors">
+                  Features
+                </a>
+                <a href="#pricing" className="text-neutral-400 hover:text-white transition-colors">
+                  Pricing
+                </a>
+                {loading ? (
+                  <div className="w-20 h-8 bg-white/5 rounded-xl animate-pulse" />
+                ) : user ? (
+                  <Button onClick={handleSignOut} variant="ghost" className="px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <Link href="/login">
+                      <Button variant="ghost" className="px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/signup">
+                      <Button className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00FFFF] to-[#7F5AF0] text-black hover:opacity-90">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : (
+              // Dashboard navigation (protected routes)
+              <>
+                <Link href="/dashboard" className="text-neutral-400 hover:text-white transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/tasks" className="text-neutral-400 hover:text-white transition-colors">
+                  Tasks
+                </Link>
+                <Link href="/analytics" className="text-neutral-400 hover:text-white transition-colors">
+                  Analytics
+                </Link>
+                <Link href="/settings" className="text-neutral-400 hover:text-white transition-colors">
+                  Settings
+                </Link>
+                {loading ? (
+                  <div className="w-20 h-8 bg-white/5 rounded-xl animate-pulse" />
+                ) : user ? (
+                  <Button onClick={handleSignOut} variant="ghost" className="px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Link href="/login">
+                    <Button variant="ghost" className="px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Theme Toggle & Mobile Menu */}
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              variant="ghost"
-              size="sm"
-              className="w-10 h-10 rounded-full bg-white/5 border border-neutral-700/40 hover:bg-white/10"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4 text-neutral-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-neutral-400" />
-              )}
-            </Button>
-
-            {/* Mobile Menu Button */}
-            <Button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              variant="ghost"
-              size="sm"
-              className="md:hidden w-10 h-10 rounded-full bg-white/5 border border-neutral-700/40 hover:bg-white/10"
-            >
-              {isMenuOpen ? <X className="w-4 h-4 text-neutral-400" /> : <Menu className="w-4 h-4 text-neutral-400" />}
-            </Button>
-          </div>
+          {/* Mobile menu button */}
+          <button onClick={toggleMobileMenu} className="md:hidden p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5">
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-neutral-700/40 py-4"
-          >
-            <div className="space-y-2">
-              {navItems.map((item) => (
-                <Button
-                  key={item.label}
-                  onClick={() => {
-                    router.push(item.path)
-                    setIsMenuOpen(false)
-                  }}
-                  variant="ghost"
-                  className={`w-full justify-start px-4 py-3 rounded-xl transition-all duration-300 ${
-                    item.active
-                      ? "bg-[#00FFFF]/10 text-[#00FFFF] border border-[#00FFFF]/30"
-                      : "text-neutral-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  {item.label}
-                </Button>
-              ))}
-            </div>
-          </motion.div>
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-white/10">
+            {isLandingPage ? (
+              // Landing page mobile navigation
+              <div className="space-y-4">
+                <a href="#features" className="block text-neutral-400 hover:text-white transition-colors">
+                  Features
+                </a>
+                <a href="#pricing" className="block text-neutral-400 hover:text-white transition-colors">
+                  Pricing
+                </a>
+                {loading ? (
+                  <div className="w-20 h-8 bg-white/5 rounded-xl animate-pulse" />
+                ) : user ? (
+                  <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <Link href="/login">
+                      <Button variant="ghost" className="w-full justify-start px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/signup">
+                      <Button className="w-full bg-gradient-to-r from-[#00FFFF] to-[#7F5AF0] text-black hover:opacity-90">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Dashboard mobile navigation
+              <div className="space-y-4">
+                <Link href="/dashboard" className="block text-neutral-400 hover:text-white transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/tasks" className="block text-neutral-400 hover:text-white transition-colors">
+                  Tasks
+                </Link>
+                <Link href="/analytics" className="block text-neutral-400 hover:text-white transition-colors">
+                  Analytics
+                </Link>
+                <Link href="/settings" className="block text-neutral-400 hover:text-white transition-colors">
+                  Settings
+                </Link>
+                {loading ? (
+                  <div className="w-20 h-8 bg-white/5 rounded-xl animate-pulse" />
+                ) : user ? (
+                  <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Link href="/login">
+                    <Button variant="ghost" className="w-full justify-start px-4 py-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </nav>

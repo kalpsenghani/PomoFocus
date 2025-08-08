@@ -1,6 +1,6 @@
 import type React from "react"
 import "./globals.css"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -14,8 +14,11 @@ export const metadata: Metadata = {
   title: "PomoFocus - AI-Powered Productivity Platform",
   description: "Advanced focus and productivity platform with Pomodoro timer, task management, and AI insights",
   manifest: "/manifest.json",
+  generator: 'v0.dev'
+}
+
+export const viewport: Viewport = {
   themeColor: "#0D0D0D",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -25,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#111827] to-[#1E1E1E] relative overflow-hidden">

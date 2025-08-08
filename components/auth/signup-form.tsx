@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +32,7 @@ export function SignupForm({ onToggleMode }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { signUp } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,6 +59,7 @@ export function SignupForm({ onToggleMode }: SignupFormProps) {
 
     try {
       await signUp(formData.email, formData.password, formData.fullName)
+      // Don't navigate here - let the auth state change handle it
       toast({
         title: "Account created!",
         description: "Please check your email to verify your account.",
