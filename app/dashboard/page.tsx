@@ -18,7 +18,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loading && !user && !redirecting) {
       setRedirecting(true)
-      window.location.href = "/login"
+      window.location.href = "/"
     }
   }, [user, loading, redirecting])
 
