@@ -1,5 +1,8 @@
 "use client"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 import { Navigation } from "@/components/navigation"
 import { AnalyticsOverview } from "@/components/analytics-overview"
 import { ProductivityTrends } from "@/components/productivity-trends"

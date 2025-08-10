@@ -10,9 +10,9 @@ const nextConfig = {
     unoptimized: true,
   },
   webpack: (config) => {
-    // Workaround for Node.js v22 hashing incompatibility during production builds
+    // Ensure a supported and fast hashing algorithm across Node versions
     config.output = config.output || {}
-    config.output.hashFunction = 'md4'
+    config.output.hashFunction = 'xxhash64'
     return config
   },
   async headers() {

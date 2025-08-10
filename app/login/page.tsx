@@ -1,5 +1,8 @@
 "use client"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 import { Suspense } from "react"
 import { BackgroundAnimation } from "@/components/background-animation"
 import { LoginForm } from "@/components/auth/login-form"
